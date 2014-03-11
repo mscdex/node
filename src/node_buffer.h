@@ -41,6 +41,10 @@ NODE_EXTERN char* Data(v8::Handle<v8::Value> val);
 NODE_EXTERN char* Data(v8::Handle<v8::Object> val);
 NODE_EXTERN size_t Length(v8::Handle<v8::Value> val);
 NODE_EXTERN size_t Length(v8::Handle<v8::Object> val);
+NODE_EXTERN int Compare(v8::Handle<v8::Value> val1,
+                           v8::Handle<v8::Value> val2);
+NODE_EXTERN int Compare(v8::Handle<v8::Object> val1,
+                           v8::Handle<v8::Object> val2);
 
 // public constructor
 NODE_EXTERN v8::Local<v8::Object> New(v8::Isolate* isolate, size_t length);

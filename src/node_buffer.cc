@@ -116,6 +116,29 @@ size_t Length(Handle<Object> obj) {
 }
 
 
+int Compare(Handle<Value> val1, Handle<Value> val2) {
+  assert(val1->IsObject());
+  assert(val2->IsObject());
+  return Compare(val1.As<Object>(), val2.As<Object>());
+}
+
+
+int Compare(Handle<Object> val1, Handle<Object> val2) {
+  char* data1 = Data(val1);
+  char* data2 = Data(val2);
+  size_t len1 = Length(val1);
+  size_t len2 = Length(val2);
+  int ret = memcmp(data1, data2, MIN(len1, len2));
+  if (ret == 0) {
+    if (len1 < len2)
+      ret = -1;
+    else if (len2 < len1)
+      ret = 1;
+  }
+  return ret;
+}
+
+
 Local<Object> New(Isolate* isolate, Handle<String> string, enum encoding enc) {
   HandleScope scope(isolate);
 
@@ -606,6 +629,22 @@ void ByteLength(const FunctionCallbackInfo<Value> &args) {
 }
 
 
+void CompareJS(const FunctionCallbackInfo<Value> &args) {
+  Environment* env = Environment::GetCurrent(args.GetIsolate());
+  HandleScope scope(env->isolate());
+
+  if (args.Length() < 2)
+    return env->ThrowTypeError("Missing two Buffer arguments");
+  if (!HasInstance(args[0]) || !HasInstance(args[1]))
+    return env->ThrowTypeError("Argument must be Buffers");
+
+  Local<Object> target1 = args[0]->ToObject();
+  Local<Object> target2 = args[1]->ToObject();
+
+  args.GetReturnValue().Set(Compare(target1, target2));
+}
+
+
 // pass Buffer object to load prototype methods
 void SetupBufferJS(const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args.GetIsolate());
@@ -661,6 +700,8 @@ void SetupBufferJS(const FunctionCallbackInfo<Value>& args) {
 
   internal->Set(env->byte_length_string(),
                 FunctionTemplate::New(ByteLength)->GetFunction());
+  internal->Set(env->compare_string(),
+                FunctionTemplate::New(CompareJS)->GetFunction());
 }
 
 
